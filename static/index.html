@@ -114,7 +114,8 @@
 			<div class="row">
 				<div class="col-8 text-left my-auto">
 					<div class="title display-4">SANS Holiday Hack Challenge 2020</div>
-          <p>To access the Holiday Hack Challenge, click <a href="https://holidayhackchallenge.com/">here</a></p>
+					<p>To access the Holiday Hack Challenge, click <a href="https://holidayhackchallenge.com/">here</a></p>
+					<div id="player-count"></div>
 				</div>
 				<div class="col-4 text-right">
 					<img src="logo.png" alt="Gatus" style="position: relative; min-width: 50px; max-width: 200px; width: 20%;"/>
@@ -165,6 +166,7 @@
 		let timerHandler = 0;
 		let refreshIntervalHandler = 0;
 		let userClickedStatus = false;
+		let playerCount = {};
 
 		function showTooltip(serviceName, index, element) {
 			userClickedStatus = false;
@@ -235,6 +237,20 @@
 				}
 			});
 		}
+
+		function refreshPlayerCount() {
+			$.getJSON("https://qa2020.kringlecon.com/data/player-count.json", function (data) {
+				playerCount = data;
+				buildPlayerCount();
+			});
+		}
+
+		function buildPlayerCount(){
+          let output = "<h3><p>Current players:<b> "+playerCount.playerCount+"</b></p></h3>";
+			console.log(JSON.stringify(playerCount));
+			$("#player-count").html(output);
+		}
+
 
 		function buildTable() {
 			let outputByGroup = {};
@@ -376,6 +392,7 @@
 
 		function setRefreshInterval(seconds) {
 			refreshStatuses();
+			refreshPlayerCount();
 			refreshIntervalHandler = setInterval(function() {
 				refreshStatuses();
 			}, seconds * 1000);
