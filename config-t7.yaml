@@ -1,0 +1,79 @@
+services:
+  - name: warehouse.clip.atrix
+    group: clip.atrix
+    url: "http://warehouse.clip.atrix"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+      - "[RESPONSE_TIME] < 1000"
+  - name: lightgateway.clip.atrix
+    group: clip.atrix
+    url: "http://lightgateway.clip.atrix"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+      - "[RESPONSE_TIME] < 1000"
+  - name: email.clip.atrix
+    group: clip.atrix
+    url: "http://email.clip.atrix"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+      - "[RESPONSE_TIME] < 1000"
+  - name: cam1.clip.atrix
+    group: clip.atrix
+    url: "http://cam1.clip.atrix"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+      - "[RESPONSE_TIME] < 1000"
+  - name: cam2.clip.atrix
+    group: clip.atrix
+    url: "http://cam2.clip.atrix"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+      - "[RESPONSE_TIME] < 1000"
+  - name: clipsim.clip.atrix
+    group: clip.atrix
+    url: "http://clipsim.clip.atrix"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+      - "[RESPONSE_TIME] < 1000"
+  - name: siem.clip.atrix
+    group: clip.atrix
+    url: "http://siem.clip.atrix"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+      - "[RESPONSE_TIME] < 1000"
+  - name: ids.clip.atrix
+    group: clip.atrix
+    url: "http://ids.clip.atrix"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+      - "[RESPONSE_TIME] < 1000"
+  - name: architect.clip.atrix
+    group: clip.atrix
+    url: "http://ids.clip.atrix"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+      - "[RESPONSE_TIME] < 1000"
+  # .iot
+  - name: dyslexa.io
+    group: .iot
+    url: "http://dyslexa.iot"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+      - "[RESPONSE_TIME] < 1000"
+  - name: mirandascam.neighborhood.iot
+    group: .iot
+    url: "http://mirandascam.neighborhood.iot"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+      - "[RESPONSE_TIME] < 1000"
