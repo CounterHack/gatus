@@ -11,7 +11,7 @@ services:
     url: "http://lightgateway.clip.atrix"
     interval: 1m
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] == 401"
       - "[RESPONSE_TIME] < 1000"
   - name: email.clip.atrix
     group: clip.atrix
@@ -62,11 +62,19 @@ services:
     conditions:
       - "[STATUS] == 200"
       - "[RESPONSE_TIME] < 1000"
-  # .iot
-  - name: dyslexa.io
-    group: .iot
-    url: "http://dyslexa.iot"
+  - name: iis01.clip.atrix
+    group: clip.atrix
+    url: "http://iis01.clip.atrix/default.aspx"
     interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+      - "[RESPONSE_TIME] < 1000"
+  # .iot
+  - name: dyslexa.iot
+    group: .iot
+    url: "https://dyslexa.iot"
+    interval: 1m
+    insecure: true
     conditions:
       - "[STATUS] == 200"
       - "[RESPONSE_TIME] < 1000"
@@ -77,3 +85,12 @@ services:
     conditions:
       - "[STATUS] == 200"
       - "[RESPONSE_TIME] < 1000"
+  - name: DNS query
+    url: "10.7.3.6" # Address of the DNS server to use
+    interval: 30s
+    dns:
+      query-name: "warehouse.clip.atrix"
+      query-type: "A"
+    conditions:
+      - "[BODY] == 10.7.3.14"
+      - "[DNS_RCODE] == NOERROR"
