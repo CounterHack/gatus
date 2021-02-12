@@ -17,6 +17,16 @@ func TestGetBeforeConfigIsLoaded(t *testing.T) {
 	t.Fatal("Should've panicked because the configuration hasn't been loaded yet")
 }
 
+func TestSet(t *testing.T) {
+	if config != nil {
+		t.Fatal("config should've been nil")
+	}
+	Set(&Config{})
+	if config == nil {
+		t.Fatal("config shouldn't have been nil")
+	}
+}
+
 func TestLoadFileThatDoesNotExist(t *testing.T) {
 	err := Load("file-that-does-not-exist.yaml")
 	if err == nil {
@@ -32,7 +42,10 @@ func TestLoadDefaultConfigurationFile(t *testing.T) {
 }
 
 func TestParseAndValidateConfigBytes(t *testing.T) {
-	config, err := parseAndValidateConfigBytes([]byte(`
+	file := t.TempDir() + "/test.db"
+	config, err := parseAndValidateConfigBytes([]byte(fmt.Sprintf(`
+storage:
+  file: %s
 services:
   - name: twinnation
     url: https://twinnation.org/health
@@ -44,9 +57,9 @@ services:
     conditions:
       - "[STATUS] != 400"
       - "[STATUS] != 500"
-`))
+`, file)))
 	if err != nil {
-		t.Error("No error should've been returned")
+		t.Error("expected no error, got", err.Error())
 	}
 	if config == nil {
 		t.Fatal("Config shouldn't have been nil")
@@ -89,7 +102,7 @@ services:
       - "[STATUS] == 200"
 `))
 	if err != nil {
-		t.Error("No error should've been returned")
+		t.Error("expected no error, got", err.Error())
 	}
 	if config == nil {
 		t.Fatal("Config shouldn't have been nil")
@@ -109,9 +122,6 @@ services:
 	if config.Web.Port != DefaultPort {
 		t.Errorf("Port should have been %d, because it is the default value", DefaultPort)
 	}
-	if config.Web.ContextRoot != DefaultContextRoot {
-		t.Errorf("ContextRoot should have been %s, because it is the default value", DefaultContextRoot)
-	}
 }
 
 func TestParseAndValidateConfigBytesWithAddress(t *testing.T) {
@@ -125,7 +135,7 @@ services:
       - "[STATUS] == 200"
 `))
 	if err != nil {
-		t.Error("No error should've been returned")
+		t.Error("expected no error, got", err.Error())
 	}
 	if config == nil {
 		t.Fatal("Config shouldn't have been nil")
@@ -155,12 +165,12 @@ web:
   port: 12345
 services:
   - name: twinnation
-    url: https://twinnation.org/actuator/health
+    url: https://twinnation.org/health
     conditions:
       - "[STATUS] == 200"
 `))
 	if err != nil {
-		t.Error("No error should've been returned")
+		t.Error("expected no error, got", err.Error())
 	}
 	if config == nil {
 		t.Fatal("Config shouldn't have been nil")
@@ -168,17 +178,15 @@ services:
 	if config.Metrics {
 		t.Error("Metrics should've been false by default")
 	}
-	if config.Services[0].URL != "https://twinnation.org/actuator/health" {
-		t.Errorf("URL should have been %s", "https://twinnation.org/actuator/health")
+	if config.Services[0].URL != "https://twinnation.org/health" {
+		t.Errorf("URL should have been %s", "https://twinnation.org/health")
 	}
 	if config.Services[0].Interval != 60*time.Second {
 		t.Errorf("Interval should have been %s, because it is the default value", 60*time.Second)
 	}
-
 	if config.Web.Address != DefaultAddress {
 		t.Errorf("Bind address should have been %s, because it is the default value", DefaultAddress)
 	}
-
 	if config.Web.Port != 12345 {
 		t.Errorf("Port should have been %d, because it is specified in config", 12345)
 	}
@@ -196,7 +204,7 @@ services:
       - "[STATUS] == 200"
 `))
 	if err != nil {
-		t.Error("No error should've been returned")
+		t.Error("expected no error, got", err.Error())
 	}
 	if config == nil {
 		t.Fatal("Config shouldn't have been nil")
@@ -215,44 +223,6 @@ services:
 	}
 	if config.Web.Port != 12345 {
 		t.Errorf("Port should have been %d, because it is specified in config", 12345)
-	}
-}
-
-func TestParseAndValidateConfigBytesWithPortAndHostAndContextRoot(t *testing.T) {
-	config, err := parseAndValidateConfigBytes([]byte(`
-web:
-  port: 12345
-  address: 127.0.0.1
-  context-root: /deeply/nested/down=/their
-services:
-  - name: twinnation
-    url: https://twinnation.org/health
-    conditions:
-      - "[STATUS] == 200"
-`))
-	if err != nil {
-		t.Error("No error should've been returned")
-	}
-	if config == nil {
-		t.Fatal("Config shouldn't have been nil")
-	}
-	if config.Metrics {
-		t.Error("Metrics should've been false by default")
-	}
-	if config.Services[0].URL != "https://twinnation.org/health" {
-		t.Errorf("URL should have been %s", "https://twinnation.org/health")
-	}
-	if config.Services[0].Interval != 60*time.Second {
-		t.Errorf("Interval should have been %s, because it is the default value", 60*time.Second)
-	}
-	if config.Web.Address != "127.0.0.1" {
-		t.Errorf("Bind address should have been %s, because it is specified in config", "127.0.0.1")
-	}
-	if config.Web.Port != 12345 {
-		t.Errorf("Port should have been %d, because it is specified in config", 12345)
-	}
-	if config.Web.ContextRoot != "/deeply/nested/down=/their/" {
-		t.Errorf("Port should have been %s, because it is specified in config", "/deeply/nested/down=/their/")
 	}
 }
 
@@ -271,17 +241,19 @@ services:
 	t.Fatal("Should've panicked because the configuration specifies an invalid port value")
 }
 
-func TestParseAndValidateConfigBytesWithMetrics(t *testing.T) {
+func TestParseAndValidateConfigBytesWithMetricsAndCustomUserAgentHeader(t *testing.T) {
 	config, err := parseAndValidateConfigBytes([]byte(`
 metrics: true
 services:
   - name: twinnation
     url: https://twinnation.org/health
+    headers:
+      User-Agent: Test/2.0
     conditions:
       - "[STATUS] == 200"
 `))
 	if err != nil {
-		t.Error("No error should've been returned")
+		t.Error("expected no error, got", err.Error())
 	}
 	if config == nil {
 		t.Fatal("Config shouldn't have been nil")
@@ -301,25 +273,25 @@ services:
 	if config.Web.Port != DefaultPort {
 		t.Errorf("Port should have been %d, because it is the default value", DefaultPort)
 	}
-	if config.Web.ContextRoot != DefaultContextRoot {
-		t.Errorf("ContextRoot should have been %s, because it is the default value", DefaultContextRoot)
+	if userAgent := config.Services[0].Headers["User-Agent"]; userAgent != "Test/2.0" {
+		t.Errorf("User-Agent should've been %s, got %s", "Test/2.0", userAgent)
 	}
 }
 
 func TestParseAndValidateConfigBytesWithMetricsAndHostAndPort(t *testing.T) {
 	config, err := parseAndValidateConfigBytes([]byte(`
 metrics: true
+web:
+  address: 192.168.0.1
+  port: 9090
 services:
   - name: twinnation
     url: https://twinnation.org/health
     conditions:
       - "[STATUS] == 200"
-web:
-  address: 192.168.0.1
-  port: 9090
 `))
 	if err != nil {
-		t.Error("No error should've been returned")
+		t.Error("expected no error, got", err.Error())
 	}
 	if config == nil {
 		t.Fatal("Config shouldn't have been nil")
@@ -327,17 +299,20 @@ web:
 	if !config.Metrics {
 		t.Error("Metrics should have been true")
 	}
+	if config.Web.Address != "192.168.0.1" {
+		t.Errorf("Bind address should have been %s, because it is the default value", "192.168.0.1")
+	}
+	if config.Web.Port != 9090 {
+		t.Errorf("Port should have been %d, because it is specified in config", 9090)
+	}
 	if config.Services[0].URL != "https://twinnation.org/health" {
 		t.Errorf("URL should have been %s", "https://twinnation.org/health")
 	}
 	if config.Services[0].Interval != 60*time.Second {
 		t.Errorf("Interval should have been %s, because it is the default value", 60*time.Second)
 	}
-	if config.Web.Address != "192.168.0.1" {
-		t.Errorf("Bind address should have been %s, because it is the default value", "192.168.0.1")
-	}
-	if config.Web.Port != 9090 {
-		t.Errorf("Port should have been %d, because it is specified in config", 9090)
+	if userAgent := config.Services[0].Headers["User-Agent"]; userAgent != core.GatusUserAgent {
+		t.Errorf("User-Agent should've been %s because it's the default value, got %s", core.GatusUserAgent, userAgent)
 	}
 }
 
@@ -360,7 +335,6 @@ badconfig:
 func TestParseAndValidateConfigBytesWithAlerting(t *testing.T) {
 	config, err := parseAndValidateConfigBytes([]byte(`
 debug: true
-
 alerting:
   slack:
     webhook-url: "http://example.com"
@@ -387,7 +361,7 @@ services:
       - "[STATUS] == 200"
 `))
 	if err != nil {
-		t.Error("No error should've been returned")
+		t.Error("expected no error, got", err.Error())
 	}
 	if config == nil {
 		t.Fatal("Config shouldn't have been nil")
@@ -480,7 +454,7 @@ services:
       - "[STATUS] == 200"
 `))
 	if err != nil {
-		t.Error("No error should've been returned")
+		t.Error("expected no error, got", err.Error())
 	}
 	if config == nil {
 		t.Fatal("Config shouldn't have been nil")
@@ -514,7 +488,7 @@ services:
       - "[STATUS] == 200"
 `))
 	if err != nil {
-		t.Error("No error should've been returned")
+		t.Error("expected no error, got", err.Error())
 	}
 	if config == nil {
 		t.Fatal("Config shouldn't have been nil")
@@ -553,7 +527,7 @@ services:
       - "[STATUS] == 200"
 `))
 	if err != nil {
-		t.Error("No error should've been returned")
+		t.Error("expected no error, got", err.Error())
 	}
 	if config == nil {
 		t.Fatal("Config shouldn't have been nil")
@@ -606,7 +580,7 @@ services:
       - "[STATUS] == 200"
 `, expectedUsername, expectedPasswordHash)))
 	if err != nil {
-		t.Error("No error should've been returned")
+		t.Error("expected no error, got", err.Error())
 	}
 	if config == nil {
 		t.Fatal("Config shouldn't have been nil")
@@ -673,7 +647,7 @@ kubernetes:
       target-path: "/health"
 `))
 	if err != nil {
-		t.Error("No error should've been returned")
+		t.Error("expected no error, got", err.Error())
 	}
 	if config == nil {
 		t.Fatal("Config shouldn't have been nil")

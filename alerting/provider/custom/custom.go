@@ -2,9 +2,11 @@ package custom
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/TwinProduction/gatus/client"
@@ -31,7 +33,7 @@ func (provider *AlertProvider) ToCustomAlertProvider(service *core.Service, aler
 	return provider
 }
 
-func (provider *AlertProvider) buildRequest(serviceName, alertDescription string, resolved bool) *http.Request {
+func (provider *AlertProvider) buildHTTPRequest(serviceName, alertDescription string, resolved bool) *http.Request {
 	body := provider.Body
 	providerURL := provider.URL
 	method := provider.Method
@@ -74,7 +76,13 @@ func (provider *AlertProvider) buildRequest(serviceName, alertDescription string
 
 // Send a request to the alert provider and return the body
 func (provider *AlertProvider) Send(serviceName, alertDescription string, resolved bool) ([]byte, error) {
-	request := provider.buildRequest(serviceName, alertDescription, resolved)
+	if os.Getenv("MOCK_ALERT_PROVIDER") == "true" {
+		if os.Getenv("MOCK_ALERT_PROVIDER_ERROR") == "true" {
+			return nil, errors.New("error")
+		}
+		return []byte("{}"), nil
+	}
+	request := provider.buildHTTPRequest(serviceName, alertDescription, resolved)
 	response, err := client.GetHTTPClient(provider.Insecure).Do(request)
 	if err != nil {
 		return nil, err

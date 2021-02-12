@@ -14,14 +14,28 @@ import (
 	"github.com/TwinProduction/gatus/client"
 )
 
+const (
+	// HostHeader is the name of the header used to specify the host
+	HostHeader = "Host"
+
+	// ContentTypeHeader is the name of the header used to specify the content type
+	ContentTypeHeader = "Content-Type"
+
+	// UserAgentHeader is the name of the header used to specify the request's user agent
+	UserAgentHeader = "User-Agent"
+
+	// GatusUserAgent is the default user agent that Gatus uses to send requests.
+	GatusUserAgent = "Gatus/1.0"
+)
+
 var (
-	// ErrServiceWithNoCondition is the error with which gatus will panic if a service is configured with no conditions
+	// ErrServiceWithNoCondition is the error with which Gatus will panic if a service is configured with no conditions
 	ErrServiceWithNoCondition = errors.New("you must specify at least one condition per service")
 
-	// ErrServiceWithNoURL is the error with which gatus will panic if a service is configured with no url
+	// ErrServiceWithNoURL is the error with which Gatus will panic if a service is configured with no url
 	ErrServiceWithNoURL = errors.New("you must specify an url for each service")
 
-	// ErrServiceWithNoName is the error with which gatus will panic if a service is configured with no name
+	// ErrServiceWithNoName is the error with which Gatus will panic if a service is configured with no name
 	ErrServiceWithNoName = errors.New("you must specify a name for each service")
 )
 
@@ -82,6 +96,15 @@ func (service *Service) ValidateAndSetDefaults() {
 	if len(service.Headers) == 0 {
 		service.Headers = make(map[string]string)
 	}
+	// Automatically add user agent header if there isn't one specified in the service configuration
+	if _, userAgentHeaderExists := service.Headers[UserAgentHeader]; !userAgentHeaderExists {
+		service.Headers[UserAgentHeader] = GatusUserAgent
+	}
+	// Automatically add "Content-Type: application/json" header if there's no Content-Type set
+	// and service.GraphQL is set to true
+	if _, contentTypeHeaderExists := service.Headers[ContentTypeHeader]; !contentTypeHeaderExists && service.GraphQL {
+		service.Headers[ContentTypeHeader] = "application/json"
+	}
 	for _, alert := range service.Alerts {
 		if alert.FailureThreshold <= 0 {
 			alert.FailureThreshold = 3
@@ -99,12 +122,10 @@ func (service *Service) ValidateAndSetDefaults() {
 	if len(service.Conditions) == 0 {
 		panic(ErrServiceWithNoCondition)
 	}
-
 	if service.DNS != nil {
 		service.DNS.validateAndSetDefault()
 		return
 	}
-
 	// Make sure that the request can be created
 	_, err := http.NewRequest(service.Method, service.URL, bytes.NewBuffer([]byte(service.Body)))
 	if err != nil {
@@ -169,9 +190,10 @@ func (service *Service) call(result *Result) {
 	var request *http.Request
 	var response *http.Response
 	var err error
-	isServiceTCP := strings.HasPrefix(service.URL, "tcp://")
 	isServiceDNS := service.DNS != nil
-	isServiceHTTP := !isServiceTCP && !isServiceDNS
+	isServiceTCP := strings.HasPrefix(service.URL, "tcp://")
+	isServiceICMP := strings.HasPrefix(service.URL, "icmp://")
+	isServiceHTTP := !isServiceDNS && !isServiceTCP && !isServiceICMP
 	if isServiceHTTP {
 		request = service.buildHTTPRequest()
 	}
@@ -180,8 +202,10 @@ func (service *Service) call(result *Result) {
 		service.DNS.query(service.URL, result)
 		result.Duration = time.Since(startTime)
 	} else if isServiceTCP {
-		result.Connected = client.CanCreateConnectionToTCPService(strings.TrimPrefix(service.URL, "tcp://"))
+		result.Connected = client.CanCreateTCPConnection(strings.TrimPrefix(service.URL, "tcp://"))
 		result.Duration = time.Since(startTime)
+	} else if isServiceICMP {
+		result.Connected, result.Duration = client.Ping(strings.TrimPrefix(service.URL, "icmp://"))
 	} else {
 		response, err = client.GetHTTPClient(service.Insecure).Do(request)
 		result.Duration = time.Since(startTime)
@@ -216,6 +240,9 @@ func (service *Service) buildHTTPRequest() *http.Request {
 	request, _ := http.NewRequest(service.Method, service.URL, bodyBuffer)
 	for k, v := range service.Headers {
 		request.Header.Set(k, v)
+		if k == HostHeader {
+			request.Host = v
+		}
 	}
 	return request
 }

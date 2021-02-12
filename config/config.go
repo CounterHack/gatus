@@ -11,6 +11,8 @@ import (
 	"github.com/TwinProduction/gatus/core"
 	"github.com/TwinProduction/gatus/k8s"
 	"github.com/TwinProduction/gatus/security"
+	"github.com/TwinProduction/gatus/storage"
+	"github.com/TwinProduction/gatus/util"
 	"gopkg.in/yaml.v2"
 )
 
@@ -28,9 +30,6 @@ const (
 
 	// DefaultPort is the default port the service will listen on
 	DefaultPort = 8080
-
-	// DefaultContextRoot is the default context root of the web application
-	DefaultContextRoot = "/"
 )
 
 var (
@@ -74,8 +73,11 @@ type Config struct {
 	// Kubernetes is the Kubernetes configuration
 	Kubernetes *k8s.Config `yaml:"kubernetes"`
 
+	// Storage is the configuration for how the data is stored
+	Storage *storage.Config `yaml:"storage"`
+
 	// Web is the configuration for the web listener
-	Web *webConfig `yaml:"web"`
+	Web *WebConfig `yaml:"web"`
 }
 
 // Get returns the configuration, or panics if the configuration hasn't loaded yet
@@ -84,6 +86,12 @@ func Get() *Config {
 		panic(ErrConfigNotLoaded)
 	}
 	return config
+}
+
+// Set sets the configuration
+// Used only for testing
+func Set(cfg *Config) {
+	config = cfg
 }
 
 // Load loads a custom configuration file
@@ -141,13 +149,33 @@ func parseAndValidateConfigBytes(yamlBytes []byte) (config *Config, err error) {
 		validateServicesConfig(config)
 		validateKubernetesConfig(config)
 		validateWebConfig(config)
+		validateStorageConfig(config)
 	}
 	return
 }
 
+func validateStorageConfig(config *Config) {
+	if config.Storage == nil {
+		config.Storage = &storage.Config{}
+	}
+	err := storage.Initialize(config.Storage)
+	if err != nil {
+		panic(err)
+	}
+	// Remove all ServiceStatus that represent services which no longer exist in the configuration
+	var keys []string
+	for _, service := range config.Services {
+		keys = append(keys, util.ConvertGroupAndServiceToKey(service.Group, service.Name))
+	}
+	numberOfServiceStatusesDeleted := storage.Get().DeleteAllServiceStatusesNotInKeys(keys)
+	if numberOfServiceStatusesDeleted > 0 {
+		log.Printf("[config][validateStorageConfig] Deleted %d service statuses because their matching services no longer existed", numberOfServiceStatusesDeleted)
+	}
+}
+
 func validateWebConfig(config *Config) {
 	if config.Web == nil {
-		config.Web = &webConfig{Address: DefaultAddress, Port: DefaultPort, ContextRoot: DefaultContextRoot}
+		config.Web = &WebConfig{Address: DefaultAddress, Port: DefaultPort}
 	} else {
 		config.Web.validateAndSetDefaults()
 	}

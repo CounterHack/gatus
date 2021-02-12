@@ -1,4 +1,4 @@
-![Gatus](static/logo-with-name.png)
+![Gatus](.github/assets/logo-with-name.png)
 
 ![build](https://github.com/TwinProduction/gatus/workflows/build/badge.svg?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/TwinProduction/gatus?)](https://goreportcard.com/report/github.com/TwinProduction/gatus)
@@ -40,11 +40,13 @@ core applications: https://status.twinnation.org/
   - [Recommended interval](#recommended-interval)
   - [Default timeouts](#default-timeouts)
   - [Monitoring a TCP service](#monitoring-a-tcp-service)
-  - [Monitoring using DNS queries](#monitoring-using-dns-queries)
+  - [Monitoring a service using ICMP](#monitoring-a-service-using-icmp)
+  - [Monitoring a service using DNS queries](#monitoring-a-service-using-dns-queries)
   - [Basic authentication](#basic-authentication)
   - [disable-monitoring-lock](#disable-monitoring-lock)
   - [Service groups](#service-groups)
   - [Exposing Gatus on a custom port](#exposing-gatus-on-a-custom-port)
+  - [Uptime Badges (ALPHA)](#uptime-badges)
 
 
 ## Features
@@ -56,6 +58,7 @@ The main features of Gatus are:
 - **Alerting**: While having a pretty visual dashboard is useful to keep track of the state of your application(s), you probably don't want to stare at it all day. Thus, notifications via Slack, Mattermost, Messagebird, PagerDuty and Twilio are supported out of the box with the ability to configure a custom alerting provider for any needs you might have, whether it be a different provider or a custom application that manages automated rollbacks. 
 - **Metrics**
 - **Low resource consumption**: As with most Go applications, the resource footprint that this application requires is negligibly small.
+- **GitHub uptime badges**: ![Uptime 1h](https://status.twinnation.org/api/v1/badges/uptime/1h/core_twinnation-external.svg) ![Uptime 24h](https://status.twinnation.org/api/v1/badges/uptime/24h/core_twinnation-external.svg) ![Uptime 7d](https://status.twinnation.org/api/v1/badges/uptime/7d/core_twinnation-external.svg)
 - **Service auto discovery in Kubernetes** (ALPHA)
 
 
@@ -97,6 +100,8 @@ Note that you can also add environment variables in the configuration file (i.e.
 |:---------------------------------------- |:----------------------------------------------------------------------------- |:-------------- |
 | `debug`                                  | Whether to enable debug logs                                                  | `false`        |
 | `metrics`                                | Whether to expose metrics at /metrics                                         | `false`        |
+| `storage`                                | Storage configuration                                                         | `{}`           |
+| `storage.file`                           | File to persist the data in. If not set, storage is in-memory only.           | `""`           |
 | `services`                               | List of services to monitor                                                   | Required `[]`  |
 | `services[].name`                        | Name of the service. Can be anything.                                         | Required `""`  |
 | `services[].group`                       | Group name. Used to group multiple services together on the dashboard. See [Service groups](#service-groups). | `""`           |
@@ -148,7 +153,6 @@ Note that you can also add environment variables in the configuration file (i.e.
 | `web`                                    | Web configuration                                                             | `{}`           |
 | `web.address`                            | Address to listen on                                                          | `0.0.0.0`      |
 | `web.port`                               | Port to listen on                                                             | `8080`         |
-| `web.context-root`                       | Context root at which Gatus will be exposed (frontend and backend)            | `/`            |
 
 For Kubernetes configuration, see [Kubernetes](#kubernetes-alpha)
 
@@ -163,6 +167,7 @@ Here are some examples of conditions you can use:
 | `[STATUS] < 300`             | Status must lower than 300                              | 200, 201, 299              | 301, 302, ...  |
 | `[STATUS] <= 299`            | Status must be less than or equal to 299                | 200, 201, 299              | 301, 302, ...  |
 | `[STATUS] > 400`             | Status must be greater than 400                         | 401, 402, 403, 404         | 400, 200, ...  |
+| `[STATUS] == any(200, 429)`  | Status must be either 200 or 420                        | 200, 429                   | 201, 400, ...  |
 | `[CONNECTED] == true`        | Connection to host must've been successful              | true, false                |  |
 | `[RESPONSE_TIME] < 500`      | Response time must be below 500ms                       | 100ms, 200ms, 300ms        | 500ms, 501ms   |
 | `[IP] == 127.0.0.1`          | Target IP must be 127.0.0.1                             | 127.0.0.1                  | 0.0.0.0        |
@@ -173,6 +178,7 @@ Here are some examples of conditions you can use:
 | `len([BODY].data) < 5`       | Array at JSONPath `$.data` has less than 5 elements     | `{"data":[{"id":1}]}`      |  |
 | `len([BODY].name) == 8`      | String at JSONPath `$.name` has a length of 8           | `{"name":"john.doe"}`      | `{"name":"bob"}` |
 | `[BODY].name == pat(john*)`  | String at JSONPath `$.name` matches pattern `john*`     | `{"name":"john.doe"}`      | `{"name":"bob"}` |
+| `[BODY].id == any(1, 2)`     | Value at JSONPath `$.id` is equal to `1` or `2`         | 1, 2                       | 3, 4, 5 |
 | `[CERTIFICATE_EXPIRATION] > 48h` | Certificate expiration is more than 48h away        | 49h, 50h, 123h             | 1h, 24h, ... |
 
 
@@ -195,6 +201,7 @@ Here are some examples of conditions you can use:
 |:-----------|:---------------------------------------------------------------------------------------------------------------- |:-------------------------- |
 | `len`      | Returns the length of the object/slice. Works only with the `[BODY]` placeholder.                                | `len([BODY].username) > 8`
 | `pat`      | Specifies that the string passed as parameter should be evaluated as a pattern. Works only with `==` and `!=`.   | `[IP] == pat(192.168.*)`
+| `any`      | Specifies that any one of the values passed as parameters is a valid value. Works only with `==` and `!=`.       | `[BODY].ip == any(127.0.0.1, ::1)`
 
 **NOTE**: Use `pat` only when you need to. `[STATUS] == pat(2*)` is a lot more expensive than `[STATUS] < 300`.
 
@@ -464,6 +471,7 @@ If you're on Windows, replace `"$(pwd)"` by the absolute path to your current di
 docker run -p 8080:8080 --mount type=bind,source=C:/Users/Chris/Desktop/config.yaml,target=/config/config.yaml --name gatus twinproduction/gatus
 ```
 
+
 ## Running the tests
 
 ```
@@ -499,7 +507,7 @@ services:
         }
       }
     headers:
-      Content-Type: application/json
+      Content-Type: application/json # XXX: as of v1.9.2, this header is automatically added when graphql is set to true
     conditions:
       - "[STATUS] == 200"
       - "[BODY].data.user[0].gender == female"
@@ -556,6 +564,7 @@ simple health checks used for alerting (PagerDuty/Twilio) to `30s`.
 By prefixing `services[].url` with `tcp:\\`, you can monitor TCP services at a very basic level:
 
 ```yaml
+services:
   - name: redis
     url: "tcp://127.0.0.1:6379"
     interval: 30s
@@ -571,12 +580,30 @@ something at the given address listening to the given port, and that a connectio
 established.
 
 
-### Monitoring using DNS queries
+### Monitoring a service using ICMP
+
+By prefixing `services[].url` with `icmp:\\`, you can monitor services at a very basic level using ICMP, or more 
+commonly known as "ping" or "echo":
+
+```yaml
+services:
+  - name: ICMP
+    url: "icmp://example.com"
+    conditions:
+      - "[CONNECTED] == true"
+```
+
+Only the placeholders `[CONNECTED]`, `[IP]` and `[RESPONSE_TIME]` are supported for services of type ICMP.
+You can specify a domain prefixed by `icmp://`, or an IP address prefixed by `icmp://`.
+
+
+### Monitoring a service using DNS queries
 
 Defining a `dns` configuration in a service will automatically mark that service as a service of type DNS:
 ```yaml
+services:
   - name: example dns query
-    url: "8.8.8.8"                  # Address of the DNS server to use
+    url: "8.8.8.8" # Address of the DNS server to use
     interval: 30s
     dns:
       query-name: "example.com"
@@ -680,3 +707,38 @@ variable instead, you can use that environment variable directly in the configur
 web:
   port: ${PORT}
 ```
+
+### Uptime badges
+![Uptime 1h](https://status.twinnation.org/api/v1/badges/uptime/1h/core_twinnation-external.svg)
+![Uptime 24h](https://status.twinnation.org/api/v1/badges/uptime/24h/core_twinnation-external.svg)
+![Uptime 7d](https://status.twinnation.org/api/v1/badges/uptime/7d/core_twinnation-external.svg)
+
+Gatus can automatically generate a SVG badge for one of your monitored services.
+This allows you to put badges in your individual services' README or even create your own status page, if you 
+desire.
+
+The endpoint to generate a badge is the following:
+```
+/api/v1/badges/uptime/{duration}/{identifier}.svg
+```
+Where:
+- `{duration}` is `7d`, `24h` or `1h`
+- `{identifier}` has the pattern `<GROUP_NAME>_<SERVICE_NAME>.svg` in which both variables have ` `, `/`, `_`, `,` and `.` replaced by `-`.
+
+For instance, if you want the uptime during the last 24 hours from the service `frontend` in the group `core`, 
+the URL would look like this:
+```
+http://example.com/api/v1/badges/uptime/7d/core_frontend.svg
+```
+
+If you want to display a service that is not part of a group, you must leave the group value empty:
+```
+http://example.com/api/v1/badges/uptime/7d/_frontend.svg
+```
+
+Example: ![Uptime 24h](https://status.twinnation.org/api/v1/badges/uptime/24h/core_twinnation-external.svg)
+```
+![Uptime 24h](https://status.twinnation.org/api/v1/badges/uptime/24h/core_twinnation-external.svg)
+```
+
+If you'd like to see a visual example of each badges available, you can simply navigate to the service's detail page.
