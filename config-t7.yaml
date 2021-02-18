@@ -1,7 +1,7 @@
 services:
   - name: warehouse.clip.atrix
     group: clip.atrix
-    url: "http://warehouse.clip.atrix"
+    url: "http://warehouse.clip.atrix/healthcheck"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -15,28 +15,28 @@ services:
       - "[RESPONSE_TIME] < 1000"
   - name: email.clip.atrix
     group: clip.atrix
-    url: "http://email.clip.atrix"
+    url: "http://email.clip.atrix:4080/healthcheck"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
-      - "[RESPONSE_TIME] < 1000"
+      - "[RESPONSE_TIME] < 3000"
   - name: cam1.clip.atrix
     group: clip.atrix
-    url: "http://cam1.clip.atrix"
+    url: "http://cam1.clip.atrix:9083/healthcheck"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
       - "[RESPONSE_TIME] < 1000"
   - name: cam2.clip.atrix
     group: clip.atrix
-    url: "http://cam2.clip.atrix"
+    url: "http://cam2.clip.atrix:3080/healthcheck"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
       - "[RESPONSE_TIME] < 1000"
   - name: clipsim.clip.atrix
     group: clip.atrix
-    url: "http://clipsim.clip.atrix"
+    url: "http://clipsim.clip.atrix/healthcheck"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -50,7 +50,7 @@ services:
       - "[RESPONSE_TIME] < 1000"
   - name: ids.clip.atrix
     group: clip.atrix
-    url: "http://ids.clip.atrix"
+    url: "http://ids.clip.atrix:2080/healthcheck"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -69,6 +69,13 @@ services:
     conditions:
       - "[STATUS] == 200"
       - "[RESPONSE_TIME] < 1000"
+  - name: apply.clip.atrix
+    group: clip.atrix
+    url: "http://apply.clip.atrix:5080/healthcheck"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+      - "[RESPONSE_TIME] < 1000"
   # .iot
   - name: dyslexa.iot
     group: .iot
@@ -80,7 +87,7 @@ services:
       - "[RESPONSE_TIME] < 1000"
   - name: mirandascam.neighborhood.iot
     group: .iot
-    url: "http://mirandascam.neighborhood.iot"
+    url: "http://mirandascam.neighborhood.iot:7080/healthcheck"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
