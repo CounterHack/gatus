@@ -105,41 +105,46 @@ services:
       - "[DNS_RCODE] == NOERROR"
   - name: architect.clip.atrix
     group: Level 4
-    url: http://10.7.4.49/healthcheck
+    url: http://10.7.4.49/ThisIsTheHealthCheckPath
     conditions:
       - '[BODY].architect.Status == true'
   - name: dc01.clip.atrix
     group: Level 4
-    url: http://10.7.4.49/healthcheck
+    url: http://10.7.4.49/ThisIsTheHealthCheckPath
     conditions:
       - "[BODY].dc01.Status == true"
   - name: iis01.clip.atrix
     group: Level 4
-    url: http://10.7.4.49/healthcheck
+    url: http://10.7.4.49/ThisIsTheHealthCheckPath
     conditions:
       - "[BODY].iis01.Status == true"
   - name: sql01.clip.atrix
     group: Level 4
-    url: http://10.7.4.49/healthcheck
+    url: http://10.7.4.49/ThisIsTheHealthCheckPath
     conditions:
       - "[BODY].sql01.Status == true"
   - name: wks-architects.clip.atrix
     group: Level 4
-    url: http://10.7.4.49/healthcheck
+    url: http://10.7.4.49/ThisIsTheHealthCheckPath
     conditions:
       - "[BODY].wks-architects.Status == true"
   - name: wks-design.clip.atrix
     group: Level 4
-    url: http://10.7.4.49/healthcheck
+    url: http://10.7.4.49/ThisIsTheHealthCheckPath
     conditions:
       - "[BODY].wks-design.Status == true"
   - name: wks-finance.clip.atrix
     group: Level 4
-    url: http://10.7.4.49/healthcheck
+    url: http://10.7.4.49/ThisIsTheHealthCheckPath
     conditions:
       - "[BODY].wks-finance.Status == true"
   - name: wks-hr.clip.atrix
     group: Level 4
-    url: http://10.7.4.49/healthcheck
+    url: http://10.7.4.49/ThisIsTheHealthCheckPath
     conditions:
       - "[BODY].wks-hr.Status == true"
+  - name: kiosk.clip.atrix
+    group: Level 4
+    url: http://10.7.4.49/ThisIsTheHealthCheckPath
+    conditions:
+      - "[BODY].kiosk.Status == true"
