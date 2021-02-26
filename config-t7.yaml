@@ -7,6 +7,7 @@ services:
     conditions:
       - "[STATUS] == 200"
       - "[RESPONSE_TIME] < 1000"
+    failure-threshold: 3
   - name: lightgateway.clip.atrix
     group: clip.atrix
     url: "http://lightgateway.clip.atrix"
@@ -14,6 +15,7 @@ services:
     conditions:
       - "[STATUS] == 401"
       - "[RESPONSE_TIME] < 1000"
+    failure-threshold: 3
   - name: email.clip.atrix
     group: clip.atrix
     url: "http://email.clip.atrix:4080/healthcheck"
@@ -21,6 +23,7 @@ services:
     conditions:
       - "[STATUS] == 200"
       - "[RESPONSE_TIME] < 3000"
+    failure-threshold: 3
   - name: cam1.clip.atrix
     group: clip.atrix
     url: "http://cam1.clip.atrix:9083/healthcheck"
@@ -28,6 +31,7 @@ services:
     conditions:
       - "[STATUS] == 200"
       - "[RESPONSE_TIME] < 1000"
+    failure-threshold: 3
   - name: cam2.clip.atrix
     group: clip.atrix
     url: "http://cam2.clip.atrix:3080/healthcheck"
@@ -35,6 +39,7 @@ services:
     conditions:
       - "[STATUS] == 200"
       - "[RESPONSE_TIME] < 1000"
+    failure-threshold: 3
   - name: clipsim.clip.atrix
     group: clip.atrix
     url: "http://clipsim.clip.atrix/healthcheck"
@@ -42,6 +47,7 @@ services:
     conditions:
       - "[STATUS] == 200"
       - "[RESPONSE_TIME] < 1000"
+    failure-threshold: 3
   - name: siem.clip.atrix
     group: clip.atrix
     url: "http://siem.clip.atrix"
@@ -49,6 +55,7 @@ services:
     conditions:
       - "[STATUS] == 200"
       - "[RESPONSE_TIME] < 1000"
+    failure-threshold: 3
   - name: ids.clip.atrix
     group: clip.atrix
     url: "http://ids.clip.atrix:2080/healthcheck"
@@ -56,6 +63,7 @@ services:
     conditions:
       - "[STATUS] == 200"
       - "[RESPONSE_TIME] < 1000"
+    failure-threshold: 3
   - name: architect.clip.atrix
     group: clip.atrix
     url: "http://ids.clip.atrix"
@@ -63,6 +71,7 @@ services:
     conditions:
       - "[STATUS] == 200"
       - "[RESPONSE_TIME] < 1000"
+    failure-threshold: 3
   - name: iis01.clip.atrix
     group: clip.atrix
     url: "http://iis01.clip.atrix/default.aspx"
@@ -70,6 +79,7 @@ services:
     conditions:
       - "[STATUS] == 200"
       - "[RESPONSE_TIME] < 1000"
+    failure-threshold: 3
   - name: apply.clip.atrix
     group: clip.atrix
     url: "http://apply.clip.atrix:5080/healthcheck"
@@ -77,6 +87,7 @@ services:
     conditions:
       - "[STATUS] == 200"
       - "[RESPONSE_TIME] < 1000"
+    failure-threshold: 3
   # .iot
   - name: dyslexa.iot
     group: .iot
@@ -86,6 +97,7 @@ services:
     conditions:
       - "[STATUS] == 200"
       - "[RESPONSE_TIME] < 1000"
+    failure-threshold: 3
   - name: mirandascam.neighborhood.iot
     group: .iot
     url: "http://mirandascam.neighborhood.iot:7080/healthcheck"
@@ -93,6 +105,7 @@ services:
     conditions:
       - "[STATUS] == 200"
       - "[RESPONSE_TIME] < 1000"
+    failure-threshold: 3
   - name: warehouse.clip.atrix DNS Look up
     group: DNS
     url: "10.7.3.6"  # Address of the DNS server to use
@@ -103,48 +116,58 @@ services:
     conditions:
       - "[BODY] == 10.7.3.14"
       - "[DNS_RCODE] == NOERROR"
+    failure-threshold: 3
   - name: architect.clip.atrix
     group: Level 4
     url: http://10.7.4.49/ThisIsTheHealthCheckPath
     conditions:
       - '[BODY].architect.Status == true'
+    failure-threshold: 3
   - name: dc01.clip.atrix
     group: Level 4
     url: http://10.7.4.49/ThisIsTheHealthCheckPath
     conditions:
       - "[BODY].dc01.Status == true"
+    failure-threshold: 3
   - name: iis01.clip.atrix
     group: Level 4
     url: http://10.7.4.49/ThisIsTheHealthCheckPath
     conditions:
       - "[BODY].iis01.Status == true"
+    failure-threshold: 3
   - name: sql01.clip.atrix
     group: Level 4
     url: http://10.7.4.49/ThisIsTheHealthCheckPath
     conditions:
       - "[BODY].sql01.Status == true"
+    failure-threshold: 3
   - name: wks-architects.clip.atrix
     group: Level 4
     url: http://10.7.4.49/ThisIsTheHealthCheckPath
     conditions:
       - "[BODY].wks-architects.Status == true"
+    failure-threshold: 3
   - name: wks-design.clip.atrix
     group: Level 4
     url: http://10.7.4.49/ThisIsTheHealthCheckPath
     conditions:
       - "[BODY].wks-design.Status == true"
+    failure-threshold: 3
   - name: wks-finance.clip.atrix
     group: Level 4
     url: http://10.7.4.49/ThisIsTheHealthCheckPath
     conditions:
       - "[BODY].wks-finance.Status == true"
+    failure-threshold: 3
   - name: wks-hr.clip.atrix
     group: Level 4
     url: http://10.7.4.49/ThisIsTheHealthCheckPath
     conditions:
       - "[BODY].wks-hr.Status == true"
+    failure-threshold: 3
   - name: kiosk.clip.atrix
     group: Level 4
     url: http://10.7.4.49/ThisIsTheHealthCheckPath
     conditions:
       - "[BODY].kiosk.Status == true"
+    failure-threshold: 3
