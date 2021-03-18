@@ -23,7 +23,7 @@ func GetHTTPClient(insecure bool) *http.Client {
 	if insecure {
 		if insecureHTTPClient == nil {
 			insecureHTTPClient = &http.Client{
-				Timeout: 10 * time.Second,
+				Timeout: 60 * time.Second,
 				Transport: &http.Transport{
 					MaxIdleConns:        100,
 					MaxIdleConnsPerHost: 20,
@@ -37,7 +37,7 @@ func GetHTTPClient(insecure bool) *http.Client {
 	}
 	if secureHTTPClient == nil {
 		secureHTTPClient = &http.Client{
-			Timeout: 10 * time.Second,
+			Timeout: 60 * time.Second,
 			Transport: &http.Transport{
 				MaxIdleConns:        100,
 				MaxIdleConnsPerHost: 20,
@@ -49,7 +49,7 @@ func GetHTTPClient(insecure bool) *http.Client {
 
 // CanCreateTCPConnection checks whether a connection can be established with a TCP service
 func CanCreateTCPConnection(address string) bool {
-	conn, err := net.DialTimeout("tcp", address, 5*time.Second)
+	conn, err := net.DialTimeout("tcp", address, 60*time.Second)
 	if err != nil {
 		return false
 	}
