@@ -64,14 +64,6 @@ services:
       - "[STATUS] == 200"
       - "[RESPONSE_TIME] < 1000"
     failure-threshold: 3
-  - name: architect.clip.atrix
-    group: clip.atrix
-    url: "http://ids.clip.atrix"
-    interval: 1m
-    conditions:
-      - "[STATUS] == 200"
-      - "[RESPONSE_TIME] < 1000"
-    failure-threshold: 3
   - name: iis01.clip.atrix
     group: clip.atrix
     url: "http://iis01.clip.atrix/default.aspx"
@@ -122,12 +114,14 @@ services:
     url: http://10.7.4.49/ThisIsTheHealthCheckPath
     conditions:
       - '[BODY].architect.Status == true'
+    interval: 3m
     failure-threshold: 3
   - name: dc01.clip.atrix
     group: Level 4
     url: http://10.7.4.49/ThisIsTheHealthCheckPath
     conditions:
       - "[BODY].dc01.Status == true"
+    interval: 4m
     failure-threshold: 3
   - name: iis01.clip.atrix
     group: Level 4
@@ -135,39 +129,46 @@ services:
     conditions:
       - "[BODY].iis01.Status == true"
     failure-threshold: 3
+    interval: 5m
   - name: sql01.clip.atrix
     group: Level 4
     url: http://10.7.4.49/ThisIsTheHealthCheckPath
     conditions:
       - "[BODY].sql01.Status == true"
     failure-threshold: 3
+    interval: 6m
   - name: wks-architects.clip.atrix
     group: Level 4
     url: http://10.7.4.49/ThisIsTheHealthCheckPath
     conditions:
       - "[BODY].wks-architects.Status == true"
     failure-threshold: 3
+    interval: 7m
   - name: wks-design.clip.atrix
     group: Level 4
     url: http://10.7.4.49/ThisIsTheHealthCheckPath
     conditions:
       - "[BODY].wks-design.Status == true"
     failure-threshold: 3
+    interval: 8m
   - name: wks-finance.clip.atrix
     group: Level 4
     url: http://10.7.4.49/ThisIsTheHealthCheckPath
     conditions:
       - "[BODY].wks-finance.Status == true"
     failure-threshold: 3
+    interval: 9m
   - name: wks-hr.clip.atrix
     group: Level 4
     url: http://10.7.4.49/ThisIsTheHealthCheckPath
     conditions:
       - "[BODY].wks-hr.Status == true"
     failure-threshold: 3
+    interval: 10m
   - name: kiosk.clip.atrix
     group: Level 4
     url: http://10.7.4.49/ThisIsTheHealthCheckPath
     conditions:
       - "[BODY].kiosk.Status == true"
     failure-threshold: 3
+    interval: 11m
